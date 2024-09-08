@@ -1,8 +1,0 @@
-- @data.each do |datum|
-  .product-title
-    | Product #{datum[:product].title}
-
-  - datum[:reviews].each do |review|
-    .rating
-      | Rating #{review.rating}
-    p.body == review.body

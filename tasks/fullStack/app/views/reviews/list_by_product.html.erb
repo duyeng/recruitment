@@ -1,0 +1,2 @@
+<%= turbo_frame_tag params[:product_id], src: reviews_search_url(format: :turbo_stream, product_id: params[:product_id]), loading: :lazy do %>
+<% end %>

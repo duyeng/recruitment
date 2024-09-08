@@ -1,0 +1,7 @@
+<%= turbo_stream.update(params[:product_id]) do %>
+  <div>
+    <% @reviews.each do |review| %>
+      <%= render review %>
+    <% end %>
+  </div>
+<% end %>

@@ -5,4 +5,6 @@ Rails.application.routes.draw do
 
   resources :reviews, only: [:index, :create, :new] do
   end
+
+  get 'reviews/list_by_product', to: 'reviews#list_by_product'
 end
