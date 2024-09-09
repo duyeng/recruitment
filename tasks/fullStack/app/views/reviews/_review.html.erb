@@ -1,0 +1,22 @@
+<div class="review" style="border-bottom: 1px solid #ddd; padding-bottom: 5px; margin-bottom: 10px;">
+  </div class="header" style="display: flex; align-items: center;">
+    <div class="reviewer-name">
+      <%= review.reviewer_name || "Anonymous" %>
+    </div>
+    <div class="rating" style="display: flex; align-items: center;">
+      <% 5.times do |i| %>
+        <% if i < review.rating %>
+          <span style="color: gold;"></span>&#9733;
+        <% else %>
+          <span style="color: lightgray;"></span>&#9734;
+        <% end %>
+      <% end %>
+      <div class="time-ago" style="color: #777; font-size: 0.8em; padding-left: 8px;">
+        <%= time_ago_in_words(review.created_at) %> ago
+      </div>
+    </div>
+  </div>
+  <div class="body">
+    <%= review.body %>
+  </div>
+</div>

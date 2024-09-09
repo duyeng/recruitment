@@ -35,6 +35,21 @@ def create_reviews_for_shop(shop, products_limit = 100)
   end.count
 end
 
+def create_monthly_ratings_for_shop(shop)
+  MonthlyAvgRating.transaction do
+    today = Date.today
+    50.times.each do |i|
+      total_reviews = Random.rand(1000...1000000)
+      total_ratings = total_reviews * Random.rand(1..5)
+      i_months_ago = today - i.months
+      avg_ratings = (total_ratings / total_reviews.to_f).round(2)
+      MonthlyAvgRating.create!(
+        shop: shop, total_ratings: total_ratings, total_reviews: total_reviews,
+        avg_ratings: avg_ratings, start_date: i_months_ago.beginning_of_month)
+    end
+  end
+end
 
 Shop.find_each do |shop| create_products_for_shop(shop) end
 Shop.find_each do |shop| create_reviews_for_shop(shop) end
+Shop.find_each do |shop| create_monthly_ratings_for_shop(shop) end

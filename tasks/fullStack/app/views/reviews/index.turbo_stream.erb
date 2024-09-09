@@ -1,0 +1,22 @@
+<%= turbo_stream.update("products_list") do %>
+  <div>
+    <% @products.each do |product| %>
+      <%= render product %>
+    <% end %>
+  </div>
+<% end %>
+<%= turbo_stream.update "products_pagination" do %>
+  <% if @pagy.next %>
+    <div class="pagination" style="display: flex; flex-direction: column; align-items: center;">
+      <div class="navigate-page">
+        <% if @pagy.prev %>
+          <%= link_to "Prev", reviews_url(shop_id: params[:shop_id], page: @pagy.prev), data: { turbo_stream: true }, class: "" %>
+        <% end %>
+        <% if @pagy.next %>
+          <%= link_to "Next", reviews_url(shop_id: params[:shop_id], page: @pagy.next), data: { turbo_stream: true }, class: "" %>
+        <% end %> 
+      </div>
+      <p class="paginate-info"><%== pagy_info @pagy %></p>
+    </div>
+  <% end %>
+<% end %>

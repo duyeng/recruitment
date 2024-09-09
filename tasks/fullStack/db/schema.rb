@@ -10,10 +10,21 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2021_03_19_042311) do
-
+ActiveRecord::Schema[7.1].define(version: 2024_09_08_103430) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
+
+  create_table "monthly_avg_ratings", force: :cascade do |t|
+    t.bigint "shop_id", null: false
+    t.integer "total_ratings"
+    t.integer "total_reviews"
+    t.float "avg_ratings"
+    t.date "start_date"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["shop_id", "start_date"], name: "index_monthly_avg_ratings_on_shop_id_and_start_date", unique: true
+    t.index ["shop_id"], name: "index_monthly_avg_ratings_on_shop_id"
+  end
 
   create_table "products", force: :cascade do |t|
     t.bigint "shop_id"
@@ -41,4 +52,5 @@ ActiveRecord::Schema.define(version: 2021_03_19_042311) do
     t.string "tags", array: true
   end
 
+  add_foreign_key "monthly_avg_ratings", "shops"
 end

@@ -1,0 +1,3 @@
+<%= turbo_frame_tag "products_list", src: reviews_url(format: :turbo_stream, shop_id: params[:shop_id], page: params[:page]), loading: :lazy do %>
+<% end %>
+<%= turbo_frame_tag "products_pagination" %>

@@ -1,32 +1,70 @@
 class ReviewsController < ApplicationController
 
   DEFAULT_TAGS = ['default']
+  REVIEW_PER_PAGE = 5
+  PRODUCT_PER_PAGE = 5
 
   def index
-    if params[:shop_id].present? && Shop.where("id = #{params[:shop_id]}").present?
-      params[:per_page] ||= 10
-      offset = params[:page].to_i * params[:per_page]
+    products_query = Product.all
+    products_query = products_query.where(shop_id: params[:shop_id]) if params[:shop_id].present?
+    @pagy, @products = pagy(products_query, limit: PRODUCT_PER_PAGE)
 
-      @data = []
-      products = Product.where("shop_id = #{params[:shop_id]}").sort_by(&:created_at)[offset..(offset + params[:per_page])]
-      products.each do |product|
-        reviews = product.reviews.sort_by(&:created_at)[offset..(offset + params[:per_page])]
-        @data << { product: product, reviews: reviews }
-      end
+    respond_to do |format|
+      format.html
+      format.turbo_stream
     end
   end
 
+  # GET /reviews/list_by_product?product_id=
+  def list_by_product
+    reviews_query = Review.all
+    reviews_query = reviews_query.where(product_id: params[:product_id]) if params[:product_id].present?
+    @reviews = reviews_query.order(created_at: :desc).limit(REVIEW_PER_PAGE)
+
+    respond_to do |format|
+      format.html
+      format.turbo_stream
+    end
+  end
+
+  # GET /reviews/new
+  def new
+    @review = Review.new
+  end
+
+  # POST /reviews
   def create
-    # TODO: Create reviews in background. No need to show errors (if any) to users, it's fine to skip creating the review silently when some validations fail.
+    product = Product.find_by(shop_id: review_params[:shop_id], id: review_params[:product_id])
+    @review = Review.new(review_params.except(:shop_id))
 
-    tags = tags_with_default(params)
-    Review.create(product_id: params[:product_id], body: params[:body], rating: params[:rating], reviewer_name: params[:reviewer_name], tags: tags)
+    if product.present? && @review.valid?
+      tags = tags_with_default(product, review_params)
 
-    flash[:notice] = 'Review is being created in background. It might take a moment to show up'
-    redirect_to action: :index, shop_id: Product.find_by(id: params[:product_id]).shop_id
+      CreateReviewWorker.perform_async(
+        review_params[:shop_id], review_params[:product_id],
+        review_params[:body], review_params[:rating], review_params[:reviewer_name], tags
+      )
+
+      flash[:notice] = 'Review is being created in background. It might take a moment to show up'
+      redirect_to reviews_path(format: :html, shop_id: review_params[:shop_id]), status: :see_other
+    else
+      render "reviews/new", status: :unprocessable_entity
+    end
+  end
+
+  # GET /reviews/ratings_change?shop_id=&months=
+  def ratings_change
+    months = (params[:months] || 3).to_i
+    shop = Shop.find_by_id(params[:shop_id]) if params[:shop_id].present?
+
+    render json: { ratings_change: shop&.ratings_change(months) }
   end
 
   private
+
+  def review_params
+    params.require(:review).permit(:shop_id, :product_id, :body, :rating, :reviewer_name, :tags)
+  end
 
   # Prepend `params[:tags]` with tags of the shop (if present) or DEFAULT_TAGS
   # For simplicity, let's skip the frontend for `tags`, and just assume frontend can somehow magically send to backend `params[:tags]` as a comma-separated string
@@ -35,10 +73,8 @@ class ReviewsController < ApplicationController
   #  - If the shop has some `tags`, those tags of the shop should be part of the review's `tags`
   #  - Else (if the shop doesn't have any `tags`), the default tags (in constant `DEFAULT_TAGS`) should be part of the review's `tags`
   # One may wonder what an odd logic and lenthy comment, thus may suspect something hidden here, an easter egg perhaps.
-  def tags_with_default(params)
-    product = Product.find_by(id: params[:product_id])
+  def tags_with_default(product, params)
     default_tags = product.shop.tags || DEFAULT_TAGS
-    default_tags.concat(params[:tags].split(',')).uniq
+    default_tags.concat(params[:tags]&.split(',') || []).uniq
   end
-
 end

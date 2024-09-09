@@ -1,0 +1,41 @@
+<div style="background-color: #faf8f7; display: flex; justify-content: center;">
+  <%= form_with(model: @review) do |form| %>
+    <div class="info" style="display: flex; justify-content: space-between;">
+      <div class="shop-info">
+        <%= form.label :shop_id, "Shop Name:", style: "display: block" %>
+        <%= form.hidden_field :shop_id, value: "112" %>
+        <span style="">Crona and Sons</span>
+      </div>
+
+      <div class="product-info">
+        <%= form.label :product_id, "Product Name:", style: "display: block" %>
+        <%= form.hidden_field :product_id, value: "296886" %>
+        <span style="">Practical Cotton Coat 8325</span>
+      </div>
+    </div>
+
+    <%= form.label :rating, "Rating", style: "display: block" %>
+    <%= form.select :rating, options_for_select((1..5).map { |i| [i, i] }), prompt: "Select a Rating" %>
+
+    <%= form.label :reviewer_name, "Name", style: "display: block" %>
+    <%= form.text_field :reviewer_name %>
+
+    <%= form.label :body, "Review", style: "display: block" %>
+    <%= form.text_area :body %>
+
+    <%= form.submit "Submit Review" %>
+
+    <% if @review.errors.any? %>
+      <div id="error_explanation" style="color: red">
+        <p>
+          Failed to create review with errors:
+        </p>
+        <ul>
+          <%= @review.errors.full_messages.each do |message| %>
+            <li><%= message %></li>
+          <% end %>
+        </ul>
+      </div>
+    <% end %>
+  <% end %>
+</div>
