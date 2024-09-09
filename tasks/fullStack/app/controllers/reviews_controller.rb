@@ -18,10 +18,7 @@ class ReviewsController < ApplicationController
   # GET /reviews/list_by_product?product_id=
   def list_by_product
     reviews_query = Review.all
-    if params[:product_id].present?
-      reviews_query = reviews_query.where(product_id: params[:product_id])
-    end
-
+    reviews_query = reviews_query.where(product_id: params[:product_id]) if params[:product_id].present?
     @reviews = reviews_query.order(created_at: :desc).limit(REVIEW_PER_PAGE)
 
     respond_to do |format|
@@ -42,17 +39,25 @@ class ReviewsController < ApplicationController
 
     if product.present? && @review.valid?
       tags = tags_with_default(product, review_params)
-      CreateReviewWorker.perform_async(review_params[:product_id], review_params[:body], review_params[:rating], review_params[:reviewer_name], tags)
+
+      CreateReviewWorker.perform_async(
+        review_params[:shop_id], review_params[:product_id],
+        review_params[:body], review_params[:rating], review_params[:reviewer_name], tags
+      )
 
       flash[:notice] = 'Review is being created in background. It might take a moment to show up'
-      # redirect_to action: :index, shop_id: review_params[:shop_id]
-      # respond_to do |format|
-      #   format.html { redirect_to reviews_path(format: :html, shop_id: review_params[:shop_id]), status: :see_other}
-      # end
       redirect_to reviews_path(format: :html, shop_id: review_params[:shop_id]), status: :see_other
     else
       render "reviews/new", status: :unprocessable_entity
     end
+  end
+
+  # GET /reviews/ratings_change?shop_id=&months=
+  def ratings_change
+    months = (params[:months] || 3).to_i
+    shop = Shop.find_by_id(params[:shop_id]) if params[:shop_id].present?
+
+    render json: { ratings_change: shop&.ratings_change(months) }
   end
 
   private

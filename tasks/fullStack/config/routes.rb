@@ -7,4 +7,5 @@ Rails.application.routes.draw do
   end
 
   get 'reviews/list_by_product', to: 'reviews#list_by_product'
+  get 'reviews/ratings_change', to: 'reviews#ratings_change'
 end
